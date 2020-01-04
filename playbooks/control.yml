@@ -1,50 +1,25 @@
 ---
-- hosts: control
-  strategy: free
+- name: provisioning first
+  import_playbook: provisioning.yml
+
+- hosts: all
   gather_facts: false
   become: true
   tasks:
-  - name: Fixing hosts file
-    lineinfile:
-      dest: /etc/hosts
-      regexp: '^127\.0\.0\.1'
-      state: absent
-  - name: Adding localhost IPV4 address to host file
-    lineinfile:
-      path: /etc/hosts
-      line: 127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
-      create: yes
-  - name: Adding localhost IPV6 address to host file
-    lineinfile:
-      path: /etc/hosts
-      line: ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
-      create: yes
-  - name: Adding repo address to hosts file
-    lineinfile:
-      path: /etc/hosts
-      line: 192.168.55.199 repo.example.com repo
-      create: yes
-  - name: Adding Control address to hosts file
-    lineinfile:
-      path: /etc/hosts
-      line: 192.168.55.200 control.example.com control
-      create: yes
-  - name: Adding node1 address to hosts file
-    lineinfile:
-      path: /etc/hosts
-      line: 192.168.55.201 node1.example.com node1
-      create: yes
-  - name: Adding node2 address to hosts file
-    lineinfile:
-      path: /etc/hosts
-      line: 192.168.55.202 node2.example.com node2
-      create: yes
-  - name: Adding node3 address to hosts file
-    lineinfile:
-      path: /etc/hosts
-      line: 192.168.55.203 node3.example.com node3
-      create: yes
-  - name: Generating RSA Key
-    command : ssh-keygen -q -t rsa -f /home/user/.ssh/id_rsa -C "" -N ""
-    become: yes
-    become_user: user
+    - name: check if /etc/ansible/ansible.cfg is not a symlink
+      stat:
+        path: /etc/ansible/ansible.cfg
+      register: file
+
+    - name: remove the ansible.cfg file if it's file and replace with the symlink
+      block:
+        - file:
+            path: /etc/ansible/ansible.cfg
+            state: absent
+        - file: 
+            src: /vagrant/ansible.cfg
+            dest: /etc/ansible/ansible.cfg
+            state: link
+      when: (not file.stat.exists) or 
+            (file.stat.islnk is defined and not file.stat.islnk)
+

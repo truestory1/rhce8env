@@ -10,6 +10,11 @@
         line: PasswordAuthentication yes
       notify: restart sshd
 
+    - name: install python3
+      yum:
+        name: python3
+        state: latest
+
   handlers:
     - name: restart sshd
       service:
