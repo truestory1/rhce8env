@@ -1,0 +1,17 @@
+---
+- hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: modify sshd config
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: ^PasswordAuthentication
+        line: PasswordAuthentication yes
+      notify: restart sshd
+
+  handlers:
+    - name: restart sshd
+      service:
+        name: sshd
+        state: restarted
